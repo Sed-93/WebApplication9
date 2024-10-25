@@ -2,7 +2,7 @@ name: Build and deploy ASP.Net Core app to an Azure Web App
 
 env:
   AZURE_WEBAPP_NAME: WebApplication9    # Namnet på din Azure Web App
-  AZURE_WEBAPP_PACKAGE_PATH: '.'        # Använd hela projektkatalogen som byggd katalog
+  AZURE_WEBAPP_PACKAGE_PATH: 'WebApplication9' # Använd `WebApplication9`-katalogen direkt
   DOTNET_VERSION: '8'                   # .NET Core-versionen att använda
 
 on:
@@ -49,6 +49,7 @@ jobs:
         with:
           name: .net-app
           path: $GITHUB_WORKSPACE/WebApplication9
+          if-no-files-found: error  # Om inga filer hittas, returnera ett fel för att identifiera problemet
 
   deploy:
     permissions:
