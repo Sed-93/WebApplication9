@@ -2,7 +2,7 @@ name: Build and deploy ASP.Net Core app to an Azure Web App
 
 env:
   AZURE_WEBAPP_NAME: WebApplication9    # Namnet på din Azure Web App
-  AZURE_WEBAPP_PACKAGE_PATH: './publish' # Publicera till en specifik katalog "publish"
+  AZURE_WEBAPP_PACKAGE_PATH: './publish' # Sökvägen till katalogen där dina publicerade filer finns
   DOTNET_VERSION: '8'                   # .NET Core-versionen att använda
 
 on:
@@ -25,21 +25,13 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Set up dependency caching for faster builds
-        uses: actions/cache@v3
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
-
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish WebApplication9/WebApplication9.csproj -c Release -o $GITHUB_WORKSPACE/publish # Skapar en specifik publiceringskatalog
+        run: dotnet publish WebApplication9/WebApplication9.csproj -c Release -o $GITHUB_WORKSPACE/publish
 
-      - name: Verify publish directory   # Steg för att verifiera att rätt filer genereras
+      - name: Verify publish directory   # Kontrollera att de publicerade filerna finns
         run: |
           echo "Checking contents of the publish directory..."
           ls -R $GITHUB_WORKSPACE/publish
@@ -72,4 +64,4 @@ jobs:
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: $GITHUB_WORKSPACE/publish # Använd publiceringskatalogen för deployment
+          package: $GITHUB_WORKSPACE/publish
