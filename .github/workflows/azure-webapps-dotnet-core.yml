@@ -1,14 +1,14 @@
 name: Build and deploy ASP.Net Core app to an Azure Web App
 
 env:
-  AZURE_WEBAPP_NAME: WebApplication9    # set this to the name of your Azure Web App
-  AZURE_WEBAPP_PACKAGE_PATH: './publish'      # set this to the path to your web app project, defaults to the repository root
-  DOTNET_VERSION: '8'                 # set this to the .NET Core version to use
+  AZURE_WEBAPP_NAME: WebApplication9    # Namnet på din Azure Web App
+  AZURE_WEBAPP_PACKAGE_PATH: './publish' # Sökvägen där publiceringsfilerna lagras
+  DOTNET_VERSION: '8'                    # .NET Core-versionen att använda
 
 on:
   push:
-    branches: [ "main" ]
-  workflow_dispatch:
+    branches: [ "main" ]                 # Triggar workflow på push till "main"-grenen
+  workflow_dispatch:                     # Tillåter manuell körning av workflow
 
 permissions:
   contents: read
@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4       # Klona källkoden från ditt GitHub-repo
 
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v4
@@ -37,13 +37,16 @@ jobs:
         run: dotnet build --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/publish
+        run: dotnet publish WebApplication9/WebApplication9.csproj -c Release -o $GITHUB_WORKSPACE/publish
+
+      - name: Verify publish directory   # Steg för att verifiera att rätt filer genereras
+        run: ls -R $GITHUB_WORKSPACE/publish
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v3
         with:
           name: .net-app
-          path: ${{env.DOTNET_ROOT}}/publish
+          path: $GITHUB_WORKSPACE/publish
 
   deploy:
     permissions:
@@ -66,4 +69,4 @@ jobs:
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+          package: $GITHUB_WORKSPACE/publish
