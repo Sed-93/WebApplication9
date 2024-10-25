@@ -2,7 +2,7 @@ name: Build and deploy ASP.Net Core app to an Azure Web App
 
 env:
   AZURE_WEBAPP_NAME: WebApplication9    # Namnet på din Azure Web App
-  AZURE_WEBAPP_PACKAGE_PATH: './publish' # Sökvägen till katalogen där dina publicerade filer finns
+  AZURE_WEBAPP_PACKAGE_PATH: '$GITHUB_WORKSPACE/WebApplication9/publish' # Justerad sökväg till publicerade filer
   DOTNET_VERSION: '8'                   # .NET Core-versionen att använda
 
 on:
@@ -29,18 +29,18 @@ jobs:
         run: dotnet build --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish WebApplication9/WebApplication9.csproj -c Release -o $GITHUB_WORKSPACE/publish
+        run: dotnet publish WebApplication9/WebApplication9.csproj -c Release -o $GITHUB_WORKSPACE/WebApplication9/publish
 
       - name: Verify publish directory   # Kontrollera att de publicerade filerna finns
         run: |
           echo "Checking contents of the publish directory..."
-          ls -R $GITHUB_WORKSPACE/publish
+          ls -R $GITHUB_WORKSPACE/WebApplication9/publish
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v3
         with:
           name: .net-app
-          path: $GITHUB_WORKSPACE/publish
+          path: $GITHUB_WORKSPACE/WebApplication9/publish  # Justerad sökväg
           if-no-files-found: error  # Om inga filer hittas, returnera ett fel för att identifiera problemet
 
   deploy:
@@ -64,4 +64,4 @@ jobs:
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: $GITHUB_WORKSPACE/publish
+          package: $GITHUB_WORKSPACE/WebApplication9/publish  # Justerad sökväg för deployment
