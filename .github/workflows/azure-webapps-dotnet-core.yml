@@ -2,13 +2,13 @@ name: Build and deploy ASP.Net Core app to an Azure Web App
 
 env:
   AZURE_WEBAPP_NAME: WebApplication9    # Namnet på din Azure Web App
-  AZURE_WEBAPP_PACKAGE_PATH: 'WebApplication9' # Använd `WebApplication9`-katalogen direkt
-  DOTNET_VERSION: '8'                   # .NET Core-versionen att använda
+  AZURE_WEBAPP_PACKAGE_PATH: 'WebApplication9/bin/Release/net8.0' # Peka direkt på byggutgången
+  DOTNET_VERSION: '8'                    # .NET Core-versionen att använda
 
 on:
   push:
-    branches: [ "main" ]                # Triggar workflow på push till "main"-grenen
-  workflow_dispatch:                    # Tillåter manuell körning av workflow
+    branches: [ "main" ]                 # Triggar workflow på push till "main"-grenen
+  workflow_dispatch:                     # Tillåter manuell körning av workflow
 
 permissions:
   contents: read
@@ -36,20 +36,16 @@ jobs:
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
-      - name: dotnet publish
-        run: dotnet publish WebApplication9/WebApplication9.csproj -c Release -o $GITHUB_WORKSPACE/WebApplication9
-
-      - name: Verify WebApplication9 directory   # Steg för att verifiera att rätt filer genereras
+      - name: Verify build directory   # Steg för att verifiera att rätt filer genereras
         run: |
-          echo "Checking contents of the WebApplication9 directory..."
-          ls -R $GITHUB_WORKSPACE/WebApplication9
+          echo "Checking contents of the build directory..."
+          ls -R WebApplication9/bin/Release/net8.0
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v3
         with:
           name: .net-app
-          path: $GITHUB_WORKSPACE/WebApplication9
-          if-no-files-found: error  # Om inga filer hittas, returnera ett fel för att identifiera problemet
+          path: WebApplication9/bin/Release/net8.0
 
   deploy:
     permissions:
@@ -72,4 +68,4 @@ jobs:
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: $GITHUB_WORKSPACE/WebApplication9
+          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} # Använd bin/Release-katalogen direkt
