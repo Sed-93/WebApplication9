@@ -2,7 +2,7 @@ name: Build and deploy ASP.Net Core app to an Azure Web App
 
 env:
   AZURE_WEBAPP_NAME: WebApplication9    # Namnet på din Azure Web App
-  AZURE_WEBAPP_PACKAGE_PATH: './WebApplication9/publish' # Justera till relativ sökväg från arbetsytan
+  AZURE_WEBAPP_PACKAGE_PATH: './WebApplication9/publish' # Sökvägen till de publicerade filerna
   DOTNET_VERSION: '8'                   # .NET Core-versionen att använda
 
 on:
@@ -36,12 +36,15 @@ jobs:
           echo "Checking contents of the publish directory..."
           ls -R ./WebApplication9/publish
 
+      - name: Create ZIP package         # Skapa en ZIP-fil av de publicerade filerna
+        run: zip -r myapp.zip ./WebApplication9/publish
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v3
         with:
           name: .net-app
-          path: ./WebApplication9/publish  # Justerad relativ sökväg
-          if-no-files-found: error  # Om inga filer hittas, returnera ett fel för att identifiera problemet
+          path: myapp.zip  # Ladda upp ZIP-filen
+          if-no-files-found: error
 
   deploy:
     permissions:
@@ -64,4 +67,4 @@ jobs:
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: ./WebApplication9/publish  # Justerad relativ sökväg för deployment
+          package: myapp.zip  # Använd ZIP-filen för deployment
