@@ -2,13 +2,13 @@ name: Build and deploy ASP.Net Core app to an Azure Web App
 
 env:
   AZURE_WEBAPP_NAME: WebApplication9    # Namnet på din Azure Web App
-  AZURE_WEBAPP_PACKAGE_PATH: './WebApplication9' # Sökvägen där publiceringsfilerna lagras
-  DOTNET_VERSION: '8'                    # .NET Core-versionen att använda
+  AZURE_WEBAPP_PACKAGE_PATH: '.'        # Använd hela projektkatalogen som byggd katalog
+  DOTNET_VERSION: '8'                   # .NET Core-versionen att använda
 
 on:
   push:
-    branches: [ "main" ]
-  workflow_dispatch:
+    branches: [ "main" ]                # Triggar workflow på push till "main"-grenen
+  workflow_dispatch:                    # Tillåter manuell körning av workflow
 
 permissions:
   contents: read
@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4       # Klona källkoden från ditt GitHub-repo
 
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v4
@@ -37,13 +37,18 @@ jobs:
         run: dotnet build --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o /WebApplication9 # Ändra utmatningsmappen till ./publish
+        run: dotnet publish WebApplication9/WebApplication9.csproj -c Release -o $GITHUB_WORKSPACE/WebApplication9
+
+      - name: Verify WebApplication9 directory   # Steg för att verifiera att rätt filer genereras
+        run: |
+          echo "Checking contents of the WebApplication9 directory..."
+          ls -R $GITHUB_WORKSPACE/WebApplication9
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v3
         with:
           name: .net-app
-          path: ./WebApplication9 # Matcha med den nya utmatningsmappen
+          path: $GITHUB_WORKSPACE/WebApplication9
 
   deploy:
     permissions:
@@ -66,4 +71,4 @@ jobs:
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} # Se till att detta matchar ./publish
+          package: $GITHUB_WORKSPACE/WebApplication9
